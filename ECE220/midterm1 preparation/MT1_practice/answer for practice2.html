@@ -1,0 +1,362 @@
+
+<!-- saved from url=(0168)https://learn.intl.zju.edu.cn/bbcswebdav/pid-128895-dt-content-rid-1864225_1/courses/UIUC-100108-H124001-1092/ECE220_Practice_Exam2_%28SOL%29.txt?globalNavigation=false -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">ECE220_Practice_Exam2.pdf (SOL)
+
+
+**** Problem1(Version1)_SOL -Phone Number (version 1) *******
+*/ Your program should also print error message as it encounters any invalid inputs */
+
+.ORIG x3000
+
+;your program starts here
+
+;part-1
+
+AND R2, R2, #0
+
+loop1
+LDI R1, KBSR
+BRzp loop1
+LDI R0, KBDR
+loop2
+LDI R1, DSR
+BRzp loop2
+STI R0, DDR
+
+; part-2
+
+LD R1, NEG_R
+ADD R1,R0,R1
+BRz check
+
+LD R1, NEG_0
+ADD R1,R1,R0
+BRn Error
+LD R1, NEG_9
+ADD R1, R1, R0
+BRp Error
+
+LD R1, NEG_0
+ADD R0, R1, R0
+
+LD R1, RESULT
+ADD R1,R2,R1
+STR R0,R1, #0
+
+ADD R2, R2, #1
+ADD R0,R2,#-10
+BRp Error
+BRnzp loop1
+
+Error
+LEA R0, INV_MSG
+PUTS
+BRnzp DONE
+
+check
+ADD R0,R2,#-10
+BRz Valid
+BRnzp Error
+
+Valid
+LEA R0,VAL_MSG
+PUTS
+
+DONE
+HALT
+
+
+
+KBSR    .FILL xFE00
+KBDR    .FILL xFE02
+DSR     .FILL xFE04
+DDR     .FILL xFE06
+INV_MSG .STRINGZ "Invalid Phone Number."
+VAL_MSG .STRINGZ "Valid Phone Number."
+NEG_0   .FILL xFFD0
+NEG_9   .FILL xFFC7
+NEG_R   .FILL xFFF6
+RESULT  .FILL x5000
+
+.END
+
+
+
+**** Problem1(Version2)_SOL -Phone Number (version 2) *******
+*/ Your program should not print whether the input is a valid phone number or not until after the user presses enter. */  
+
+.ORIG x3000
+
+;your program starts here
+
+;initialization
+
+AND R2, R2, #0   ;used as digit count
+AND R3,R3, #0    ;used as error flag
+
+;part-1
+loop1
+LDI R1, KBSR
+BRzp loop1
+LDI R0, KBDR
+loop2
+LDI R1, DSR
+BRzp loop2
+STI R0, DDR
+
+; part-2
+
+LD R1, NEG_R
+ADD R1,R0,R1
+BRz check
+
+LD R1, NEG_0
+ADD R1,R1,R0
+BRn Error_Detected
+LD R1, NEG_9
+ADD R1, R1, R0
+BRp Error_Detected
+
+LD R1, NEG_0
+ADD R0, R1, R0
+
+LD R1, RESULT
+ADD R1,R2,R1
+STR R0,R1, #0
+
+ADD R2, R2, #1
+ADD R0,R2,#-10
+BRp Error_Detected
+BRnzp loop1
+
+Error_Detected
+ADD R3,R3,#1
+BRnzp loop1
+
+Error
+LEA R0, INV_MSG
+PUTS
+BRnzp DONE
+
+check
+ADD R3,R3,#0
+BRnp Error
+ADD R0,R2,#-10
+BRz Valid
+BRnzp Error
+
+Valid
+LEA R0,VAL_MSG
+PUTS
+
+DONE
+HALT
+
+KBSR    .FILL xFE00
+KBDR    .FILL xFE02
+DSR     .FILL xFE04
+DDR     .FILL xFE06
+INV_MSG .STRINGZ "Invalid Phone Number."
+VAL_MSG .STRINGZ "Valid Phone Number."
+NEG_0   .FILL xFFD0
+NEG_9   .FILL xFFC7
+NEG_R   .FILL xFFF6
+RESULT  .FILL x5000
+
+.END
+
+
+********* Problem2 (SOL) - *************
+*******Print Number in Base 7 **********
+
+
+;number to print in base 7 is in R3.
+;it will be positive.
+.ORIG x3000
+
+;your program starts here
+
+AND R4, R4, #0
+ADD R4, R4, #7
+
+loop1
+JSR DIV
+ADD R3, R0, #0
+ADD R0, R1,#0
+JSR PUSH
+ADD R3, R3, #0
+BRnp loop1
+
+loop2
+JSR POP
+ADD R5, R5, #0
+BRnp DONE
+
+LD R1,ASCII_0
+ADD R0, R1, R0
+OUT
+BRnzp loop2
+
+
+DONE
+HALT
+
+ASCII_0 .FILL x30
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;input R3, R4 (R3/R4)
+;out R0-quotient, R1-remainder
+DIV
+        ST R2,DIV_R2
+        ST R3,DIV_R3
+        NOT R2,R4
+        ADD R2,R2,#1
+        AND R0,R0,#0
+        ADD R0,R0,#-1
+DIV_LOOP
+        ADD R0,R0,#1
+        ADD R3,R3,R2
+        BRzp DIV_LOOP
+        ADD R1,R3,R4
+        LD R2,DIV_R2
+        LD R3,DIV_R3
+        RET
+
+DIV_R2 .BLKW #1
+DIV_R3 .BLKW #1
+
+
+;IN:R0, OUT:R5 (0-success, 1-fail/overflow)
+;R3: STACK_END R4: STACK_TOP
+;
+PUSH
+        ST R3, PUSH_SaveR3      ;save R3
+        ST R4, PUSH_SaveR4      ;save R4
+        AND R5, R5, #0          ;
+        LD R3, STACK_END        ;
+        LD R4, STACk_TOP        ;
+        ADD R3, R3, #-1         ;
+        NOT R3, R3              ;
+        ADD R3, R3, #1          ;
+        ADD R3, R3, R4          ;
+        BRz OVERFLOW            ;stack is full
+        STR R0, R4, #0          ;no overflow, store value in the stack
+        ADD R4, R4, #-1         ;move top of the stack
+        ST R4, STACK_TOP        ;store top of stack pointer
+        BRnzp DONE_PUSH         ;
+OVERFLOW
+        ADD R5, R5, #1          ;
+DONE_PUSH
+        LD R3, PUSH_SaveR3      ;
+        LD R4, PUSH_SaveR4      ;
+        RET
+
+
+PUSH_SaveR3     .BLKW #1        ;
+PUSH_SaveR4     .BLKW #1        ;
+
+
+;OUT: R0, OUT R5 (0-success, 1-fail/underflow)
+;R3 STACK_START R4 STACK_TOP
+;
+POP
+        ST R3, POP_SaveR3       ;save R3
+        ST R4, POP_SaveR4       ;save R3
+        AND R5, R5, #0          ;clear R5
+        LD R3, STACK_START      ;
+        LD R4, STACK_TOP        ;
+        NOT R3, R3              ;
+        ADD R3, R3, #1          ;
+        ADD R3, R3, R4          ;
+        BRz UNDERFLOW           ;
+        ADD R4, R4, #1          ;
+        LDR R0, R4, #0          ;
+        ST R4, STACK_TOP        ;
+        BRnzp DONE_POP          ;
+UNDERFLOW
+        ADD R5, R5, #1          ;
+DONE_POP
+        LD R3, POP_SaveR3       ;
+        LD R4, POP_SaveR4       ;
+        RET
+
+
+POP_SaveR3      .BLKW #1        ;
+POP_SaveR4      .BLKW #1        ;
+STACK_END       .FILL x3FF0     ;
+STACK_START     .FILL x4000     ;
+STACK_TOP       .FILL x4000     ;
+
+.END
+
+******* Problem3 (SOL) - Reverse Characters **********
+
+;Reverse Characters
+;n characters are provided to you
+;in which n is a positive number stored at x4FFF
+;characters stored in sequential memory location
+;starting at x5000
+;Use the subroutine REVERSE to flip the order
+
+.ORIG x3000
+
+;your program starts here
+; R1 - no. of Characters
+; R2 - x5000-x1 
+; R3 - x5000+xA 
+; R4, R5 - Temp
+
+LD R2,NUM_ADDR
+LDR R1, R2, #0
+LD R3, CHAR_ADDR
+ADD R3, R3, R1
+
+JSR REVERSE
+
+HALT
+
+
+;REVERSE subroutine: Input R2 &lt;- x4FFF; R3 &lt;-x500A
+;reverse the order of n characters starting at x5000
+;SWAPMEM subroutine must be called here, not in the main user program
+REVERSE
+
+ST R7, STR_R7
+
+loop
+ADD R2,R2, #1
+ADD R0, R2, #0
+ADD R3, R3, #-1
+ADD R1, R3,#0
+
+NOT R4,R3
+ADD R4, R4, #1
+
+ADD R4, R2, R4
+BRzp DONE
+
+JSR SWAPMEM
+BRnzp loop
+
+DONE
+LD R7, STR_R7
+RET
+
+
+;SWAPMEM subroutine:
+;address one is in R0, address two in R1
+;if mem[R0]=A and mem[R1]=B, then after subroutine call
+;   mem[R0]=B and mem[R1]=A
+SWAPMEM
+LDR R4, R0, #0
+LDR R5, R1, #0
+STR R4, R1, #0
+STR R5, R0, #0
+RET
+
+
+NUM_ADDR    .FILL x4FFF
+CHAR_ADDR   .FILL x5000
+STR_R7      .BLKW #1
+.END
+</pre></body></html>
