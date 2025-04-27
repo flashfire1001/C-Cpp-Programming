@@ -1,4 +1,0 @@
-建一个directory with the name of output
-
-在launch。json文件中，指定"program": "c:/Users/13967/Desktop/c/output/${fileBasenameNoExtension}.exe",
-在setting.json 文件中，指定gdb，gcc的位置
