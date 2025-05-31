@@ -113,7 +113,7 @@ private: int c=2;
 };
 
 class Derived : public Base {
-    // a is public, b is protected, c is not accessible(c is not in inherited)
+    // a is public, b is protected, c is not accessible(c is not inherited)
     
     public :
     void call_protected_b{

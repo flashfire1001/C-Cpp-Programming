@@ -61,6 +61,7 @@ void inorder(Node* root) {
     cout << root->data << " ";//otherwise access itself(the current place)
     inorder(root->right);//go right at last
 }
+
 example:
        10
       /  \
@@ -168,6 +169,7 @@ Node* search(Node* root, int key) {
 }
 
 Node* deleteNode(Node* root, int key) {
+    //return a node
     if (!root) return root; // If the tree is empty or key not found
 
     if (key < root->data) {
@@ -195,13 +197,50 @@ Node* deleteNode(Node* root, int key) {
         // Delete the inorder successor
         root->right = deleteNode(root->right, temp->data);
     }
-    return root;
+    return root;//if nothing happens to be delete return self.
 }
+
+
+//a second version: use reference(double pointer in essence)
+void deleteNode(Node* &root, int key) {
+    if (!root) return;
+
+    if (key < root->data) {
+        deleteNode(root->left, key);
+    } else if (key > root->data) {
+        deleteNode(root->right, key);
+    } else {
+        // Case 1: No child
+        if (!root->left && !root->right) {
+            delete root;
+            root = nullptr;
+        }
+        // Case 2: One child (right)
+        else if (!root->left) {
+            Node* temp = root;
+            root = root->right;
+            delete temp;
+        }
+        // Case 3: One child (left)
+        else if (!root->right) {
+            Node* temp = root;
+            root = root->left;
+            delete temp;
+        }
+        // Case 4: Two children
+        else {
+            Node* temp = findMin(root->right);
+            root->data = temp->data;
+            deleteNode(root->right, temp->data);
+        }
+    }
+}
+
 
 
 void deleteTree(Node* root) {
     if (!root) return;
-
+//post order
     deleteTree(root->left);   // delete left child
     deleteTree(root->right);  // delete right child
 
@@ -243,8 +282,6 @@ int main() {
 
 
 ### Extensions: Height
-
-Fantastic — you're asking the right questions that show deep understanding. Let's now fully explain:
 
 ------
 
@@ -383,3 +420,254 @@ This is **binary search**, and it's **fast** because it halves the work at every
 ------
 
 how **to keep a BST balanced**, using AVL trees or Red-Black Trees(advanced topics)
+
+### Application: BST Class and several functions
+
+![image-20250509194650365](C++ trees.assets/image-20250509194650365.png)
+
+my code implementation: (**Set the private functions as helper function for public functions which is used as method for that class**)
+
+```cpp
+#include <iostream>
+using namespace std;
+
+template <class T>
+class bst {
+private:
+ //privileged struct defined for the class
+    struct treenode {
+        treenode* left = nullptr;
+        treenode* right = nullptr;
+        T data;
+        treenode(const T& value) : data(value) {}
+    };
+//helper function
+    treenode* root = nullptr;
+
+    void insert(const T& data, treenode*& node) {
+        if (!node) {
+            node = new treenode(data);
+            return;
+        }
+        if (data < node->data)
+            insert(data, node->left);
+        else if (data > node->data)
+            insert(data, node->right);
+        // else: duplicates are ignored
+    }
+
+    void inorder(treenode* node) const {
+        if (!node) return;
+        inorder(node->left);
+        cout << node->data << " ";
+        inorder(node->right);
+    }
+
+    void destroy(treenode* node) {
+        if (!node) return;
+        destroy(node->left);
+        destroy(node->right);
+        delete node;
+    }
+
+public:
+    bst() = default;
+
+    explicit bst(const T& val) {
+        root = new treenode(val);
+    }
+
+    ~bst() {
+        destroy(root);
+    }
+
+    void insert(const T& data) {
+        insert(data, root);
+    }
+
+    void inorder() const {
+        inorder(root);
+        cout << endl;
+    }
+};
+
+```
+
+:one:takeout : two way to declare a class:
+
+First you can declare it outside
+
+```
+template <typename T>
+struct treenode {
+    treenode* left = nullptr;
+    treenode* right = nullptr;
+    T data;
+
+    treenode(const T& value) : data(value) {}
+};
+
+template <typename T>
+class bst {
+private:
+    treenode<T>* root = nullptr;
+
+    // ... other members using treenode<T> ...
+};
+
+
+```
+
+It is also valid perfectly and commonly used in C++ to be inside as a helper function:
+
+```
+template <class T>
+class bst {
+private:
+    struct treenode {
+        treenode* left = nullptr;
+        treenode* right = nullptr;
+        T data;
+        treenode(const T& value) : data(value) {}
+    };
+	
+    treenode* root = nullptr;
+};
+
+in this cas you need to qualify it if you want to use it outside:
+
+typename bst<int>::treenode  // if it were public
+ 
+--why Here typename:When you're inside a template and refer to something like T::X, the compiler can’t know whether X is a type, a value, or a static member — until it sees the actual type of T.
+
+So you use typename to disambiguate and say:
+
+“I promise this thing is a type.”
+```
+
+
+
+| Defined Inside Class(helper)     | Defined Outside Class              |
+| -------------------------------- | ---------------------------------- |
+| Scoped only to `bst<T>`          | Available globally                 |
+| Encapsulated & protected         | Reusable in other contexts         |
+| Easier to keep internal/private  | Requires explicit access control   |
+| Cleaner for one-off helper types | Useful if nodes used independently |
+
+
+
+<img src="C++ trees.assets/image-20250509195537302.png" alt="image-20250509195537302" style="zoom:50%;" />
+
+my code implementation:
+
+```cpp
+first question:
+bool isValidBSTHelper(TreeNode* node, long minVal, long maxVal) {
+    if (!node) return true;
+    if (node->val <= minVal || node->val >= maxVal) return false;
+    return isValidBSTHelper(node->left, minVal, node->val) &&
+           isValidBSTHelper(node->right, node->val, maxVal);
+}
+
+bool isValidBST(TreeNode* root) {
+    return isValidBSTHelper(root, LONG_MIN, LONG_MAX);
+}
+
+second question can be separated into 3 sub-question:
+given a output of preorder/inorder/post-order how to reconstruct the BST?
+
+TreeNode* bstFromPreorder(vector<int>& preorder, int& idx, int bound) {
+    if (idx == preorder.size() || preorder[idx] > bound) return nullptr;
+    TreeNode* root = new TreeNode(preorder[idx++]);
+    root->left = bstFromPreorder(preorder, idx, root->val);
+    root->right = bstFromPreorder(preorder, idx, bound);
+    //smaller than the current value ->put it to left;
+    //if stuff into left is not possible then consider stuffing into right.
+    return root;
+}
+
+TreeNode* bstFromPreorder(vector<int>& preorder) {
+    int idx = 0;
+    return bstFromPreorder(preorder, idx, INT_MAX);
+}
+
+
+Third question:
+you only need to change the treenode struture inside the class tree, its member should be vector
+    
+struct TreeNode {
+    int val;
+    vector<TreeNode*> children;
+    TreeNode(int x) : val(x) {}
+};
+
+```
+
+
+
+:two:tips for ptr usage:
+
+```cpp
+int* p1 = new int(42);
+int* p2 = p1;
+
+delete p2;// ✅ OK — as long as you don't delete p1 again
+p1 = nullptr;  // ✅ prevent accidental use
+p2 = nullptr;  // ✅ optional, but clearer
+
+ otherwise these might cause undefined error:
+*p1 = 100;   // ❌ undefined behavior
+delete p1;   // ❌ double delete — undefined behavior
+
+```
+
+:three:tips for `this->root vs root`
+
+The `this->` is optional **unless** there’s a **naming conflict**.
+
+C++ only requires `this->` when:
+
+1.  There's a **template-dependent name** (in templates, like CRTP cases)
+2.  You have a **local variable** with the same name as a member
+
+Example:
+
+```cpp
+class A {
+    int value;
+public:
+    void set(int value) {
+        this->value = value;  // ❗ disambiguate member vs parameter
+    }
+};
+
+```
+
+:four:tip : vscode 按() 左右90都按,会有高效光标跳转! 
+
+:five:tip:
+
+### ❌ Default parameter `treenode* root = root` is not valid
+
+C++ doesn’t allow you to refer to a **non-static member** in a **default parameter**:
+
+```cpp
+!!!
+void inorder(treenode* node = root)   // ❌ Error
+```
+
+✅ **Fix: Split public/private version:**
+
+```cpp
+ codevoid inorder() {
+    inorder(root);
+}
+void inorder(treenode* node) {
+    if (!node) return;
+    inorder(node->left);
+    cout << node->data << " ";
+    inorder(node->right);
+}
+```
+
+![image-20250513123633924](C++ trees.assets/image-20250513123633924.png)

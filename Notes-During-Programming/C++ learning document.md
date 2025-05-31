@@ -1,4 +1,4 @@
-# C++ learning document(basic intro)
+#  C++ learning document(basic intro)
 
 C++ Is so complex in class … 
 
@@ -139,7 +139,7 @@ class Complex{
 public:
   Complex(double real, double imag):real(real),imag(imag){};
   // example of operator overloading 
-  Complex operator+(Complex c){
+  Complex operator+(Complex &c){
 return Complex(this->real + c.real, this->imag + c.imag);
 }
 
@@ -156,10 +156,10 @@ Complex::Complex(double real, double imag){
 //ways to call the initializer:
 
 int main(){
-    Complex c1(3,4);
+    Complex c1(3,4);//ok
     Complex c{1,2};// preferred
     Complex c;// incorrect because you have uninitialised members:must be initialised.
-    Complex c2 = Complex(4,5);
+    Complex c2 = Complex(4,5);//ok
     Complex c3 = c1+c2;
     c3.print();
 }
@@ -175,14 +175,14 @@ which is :
 -   same name as class
 -   can be user defined(overload); and default argument are possible 
 -   a default constructor is with no argument.
--   DO NOT attach type specifier not even tag
+-   DO NOT attach type specifier not even void tag
 
 destructors:
 
 -   destroy an object (de-allocate memory for primary use)
 -   same name as class
 -   NO argument
--   DO NOT attach type specifier not even tag
+-   DO NOT attach type specifier not even void tag
 
 ### Inheritance
 

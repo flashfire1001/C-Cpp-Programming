@@ -350,7 +350,7 @@ Now the compiler adds the destructor to the **vtable**, and when `delete a;` is 
 Output:
 
 ```
-nginxCopyEditDog destroyed
+Dog destroyed
 Animal destroyed
 ```
 

@@ -64,6 +64,7 @@ private:
     int* data;
     int size;
 public:
+    //default constructor;
     MyArray(int s) : size(s) {
         data = new int[size];
     }
@@ -77,7 +78,7 @@ public:
     MyArray(const MyArray& other) : size(other.size) {
         data = new int[size];
         for (int i = 0; i < size; ++i) data[i] = other.data[i];
-    }
+    }// again a constructor don't have a type
 
     // 3. Copy assignment operator
     MyArray& operator=(const MyArray& other) {
@@ -88,7 +89,7 @@ public:
         data = new int[size];
         for (int i = 0; i < size; ++i) data[i] = other.data[i];
         return *this;
-    }
+    }// this is a function with a name operator= a type Myarray&;
 };
 ```
 
